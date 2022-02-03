@@ -1,0 +1,47 @@
+name: Create Release
+on: workflow_dispatch
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          architecture: x64
+
+      - name: Set up Git
+        run: |
+          git config --global user.name ${{ secrets.GIT_USERNAME }}
+          git config --global user.email ${{ secrets.GIT_USEREMAIL }}
+      
+      - name: Prepare release
+        run: |
+          mvn -B clean release:prepare -f pom.release.xml \
+          -Dgithub_username=${{ secrets.GIT_USERNAME }} \
+          -Dgithub_token=${{ secrets.GITHUB_TOKEN }} \
+          -Dgithub_owner=${{ github.repository_owner }} \
+          -Dgithub_owner_repo=${{ github.repository }}
+
+      - name: Perform release
+        run: |
+          mvn -B release:perform -f pom.release.xml \
+          -Dgithub_username=${{ secrets.GIT_USERNAME }} \
+          -Dgithub_token=${{ secrets.GITHUB_TOKEN }} \
+          -Dgithub_owner=${{ github.repository_owner }} \
+          -Dgithub_owner_repo=${{ github.repository }} \
+          -Darguments="-Dgithub_owner_repo=${{ github.repository }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean temporary files
+        run: mvn -B release:clean
