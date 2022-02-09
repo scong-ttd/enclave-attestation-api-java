@@ -1,5 +1,15 @@
 name: Create Release
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+    inputs:
+      releaseVersionOverride:
+        description: "Release version override"
+        required: false
+        default: ''
+      developmentVersionOverride:
+        description: "Next development version override"
+        required: false
+        default: ''
 
 jobs:
   create-release:
@@ -24,17 +34,28 @@ jobs:
           git config --global user.name ${{ secrets.GIT_USERNAME }}
           git config --global user.email ${{ secrets.GIT_USEREMAIL }}
       
+      - name: Override versions
+        run: |
+          test ! -z "${{ github.event.inputs.releaseVersionOverride }}"  && \
+          echo 'RELEASE_VERSION_OVERRIDE=-DreleaseVersion="${{ github.event.inputs.releaseVersionOverride }}"' >> $GITHUB_ENV || \
+          echo "releaseVersionOverride is not set, use default release version"
+          test ! -z "${{ github.event.inputs.developmentVersionOverride }}" && \
+          echo 'DEVELOPMENT_VERSION_OVERRIDE=-DdevelopmentVersion="${{ github.event.inputs.developmentVersionOverride }}"' >> $GITHUB_ENV || \
+          echo "developmentVersionOverride is not set, use default development version"
+
       - name: Prepare release
         run: |
-          mvn -B clean release:prepare -f pom.release.xml \
+          mvn -B clean release:prepare \
           -Dgithub_username=${{ secrets.GIT_USERNAME }} \
           -Dgithub_token=${{ secrets.GITHUB_TOKEN }} \
           -Dgithub_owner=${{ github.repository_owner }} \
-          -Dgithub_owner_repo=${{ github.repository }}
+          -Dgithub_owner_repo=${{ github.repository }} \
+          ${{ env.RELEASE_VERSION_OVERRIDE }} \
+          ${{ env.DEVELOPMENT_VERSION_OVERRIDE }}
 
       - name: Perform release
         run: |
-          mvn -B release:perform -f pom.release.xml \
+          mvn -B release:perform \
           -Dgithub_username=${{ secrets.GIT_USERNAME }} \
           -Dgithub_token=${{ secrets.GITHUB_TOKEN }} \
           -Dgithub_owner=${{ github.repository_owner }} \
