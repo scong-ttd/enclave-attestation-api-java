@@ -5,7 +5,7 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>enclave-attestation-api</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Interfaces for enclave attestation process</description>
@@ -77,7 +77,7 @@
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
         <url>https://${github_username}:${github_token}@github.com/${github_owner_repo}.git</url>
-        <tag>enclave-attestation-api-1.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
